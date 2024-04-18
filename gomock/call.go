@@ -19,11 +19,13 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Call represents an expected call to a mock.
 type Call struct {
-	t TestHelper // for triggering test failures on invalid call setup
+	t  TestHelper // for triggering test failures on invalid call setup
+	mu sync.Mutex
 
 	receiver   any          // the receiver of the method call
 	method     string       // the name of the method
@@ -426,6 +428,8 @@ func (c *Call) dropPrereqs() (preReqs []*Call) {
 }
 
 func (c *Call) call() []func([]any) []any {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.numCalls++
 	return c.actions
 }
@@ -492,6 +496,8 @@ func setMap(arg any, v reflect.Value) {
 }
 
 func (c *Call) addAction(action func([]any) []any) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.actions = append(c.actions, action)
 }
 

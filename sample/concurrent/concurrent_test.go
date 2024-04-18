@@ -110,7 +110,6 @@ func TestChannelTriggeredGoRoutineInvocation(t *testing.T) {
 }
 
 func TestTimerTriggeredGoRoutineInvocation(t *testing.T) {
-	t.Skip("this test should not fail but it does")
 	ctrl := gomock.NewController(t)
 	m := mock.NewMockMath(ctrl)
 
