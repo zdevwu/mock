@@ -87,3 +87,44 @@ func TestCancelWhenMocksSatisfied(t *testing.T) {
 	}
 	ctrl.Finish()
 }
+
+func TestChannelTriggeredGoRoutineInvocation(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	m := mock.NewMockMath(ctrl)
+
+	called := make(chan struct{})
+	releaseChannel := make(chan struct{})
+	go func() {
+		<-releaseChannel
+		go func() {
+			m.Sum(1, 1)
+			called <- struct{}{}
+		}()
+	}()
+
+	m.EXPECT().
+		Sum(gomock.Any(), gomock.Any()).
+		Return(2)
+	close(releaseChannel)
+	<-called
+}
+
+func TestTimerTriggeredGoRoutineInvocation(t *testing.T) {
+	t.Skip("this test should not fail but it does")
+	ctrl := gomock.NewController(t)
+	m := mock.NewMockMath(ctrl)
+
+	called := make(chan struct{})
+	go func() {
+		<-time.After(time.Millisecond * 300)
+		go func() {
+			m.Sum(1, 1)
+			called <- struct{}{}
+		}()
+	}()
+
+	m.EXPECT().
+		Sum(gomock.Any(), gomock.Any()).
+		Return(2)
+	<-called
+}
